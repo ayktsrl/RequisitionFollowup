@@ -1,4 +1,4 @@
-// Firebase destekli login.js
+// login.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
 import { getDatabase, ref, child, get } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
 
@@ -19,17 +19,20 @@ let selectedRole = "ship";
 
 function selectRole(role) {
   selectedRole = role;
-  document.getElementById("btn-ship").classList.remove("active");
-  document.getElementById("btn-inspector").classList.remove("active");
+  const shipBtn = document.getElementById("btn-ship");
+  const inspectorBtn = document.getElementById("btn-inspector");
+
+  shipBtn.classList.remove("active");
+  inspectorBtn.classList.remove("active");
 
   if (role === "ship") {
+    shipBtn.classList.add("active");
     document.getElementById("ship-fields").style.display = "block";
     document.getElementById("user-fields").style.display = "none";
-    document.getElementById("btn-ship").classList.add("active");
   } else {
+    inspectorBtn.classList.add("active");
     document.getElementById("ship-fields").style.display = "none";
     document.getElementById("user-fields").style.display = "block";
-    document.getElementById("btn-inspector").classList.add("active");
   }
 }
 
