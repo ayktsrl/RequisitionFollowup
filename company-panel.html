@@ -5,6 +5,87 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Company Panel</title>
   <link rel="stylesheet" href="style.css" />
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+    import { getDatabase, ref, get, child, update } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXLFjHMQISuunaqZzpjR6Hq0EZERa_Y0",
+      authDomain: "requisitionfollowup.firebaseapp.com",
+      projectId: "requisitionfollowup",
+      storageBucket: "requisitionfollowup.appspot.com",
+      messagingSenderId: "285248816511",
+      appId: "1:285248816511:web:543c18fe600f2fde88464a",
+      measurementId: "G-T5FGT3RCDL"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const tableBody = document.querySelector("#company-table tbody");
+    let allRequests = {};
+
+    function renderCompanyTable(data) {
+      tableBody.innerHTML = "";
+      Object.entries(data).forEach(([key, item]) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${item.reqNo}</td>
+          <td>${item.date}</td>
+          <td>${item.description}</td>
+          <td>${item.department}</td>
+          <td>
+            <select id="status-${key}">
+              <option value="In Progress" ${item.status === "In Progress" ? "selected" : ""}>In Progress</option>
+              <option value="Approved" ${item.status === "Approved" ? "selected" : ""}>Approved</option>
+              <option value="Rejected" ${item.status === "Rejected" ? "selected" : ""}>Rejected</option>
+            </select>
+          </td>
+          <td><input type="text" id="remarks-${key}" value="${item.remarks || ""}" /></td>
+          <td><button onclick="updateRequest('${key}')">Update</button></td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    window.updateRequest = async function (key) {
+      const status = document.getElementById(`status-${key}`).value;
+      const remarks = document.getElementById(`remarks-${key}`).value;
+      const requestRef = ref(db, `requests/${key}`);
+      await update(requestRef, { status, remarks });
+      alert("Request updated successfully!");
+    }
+
+    async function fetchRequests() {
+      const dbRef = ref(db);
+      const snapshot = await get(child(dbRef, "requests"));
+      if (snapshot.exists()) {
+        allRequests = snapshot.val();
+        renderCompanyTable(allRequests);
+      } else {
+        tableBody.innerHTML = '<tr><td colspan="7">No requests found.</td></tr>';
+      }
+    }
+
+    document.getElementById("filterInput").addEventListener("input", () => {
+      const search = document.getElementById("filterInput").value.toLowerCase();
+      const filtered = Object.fromEntries(
+        Object.entries(allRequests).filter(([_, req]) =>
+          req.reqNo.toLowerCase().includes(search) ||
+          req.department.toLowerCase().includes(search) ||
+          req.status.toLowerCase().includes(search)
+        )
+      );
+      renderCompanyTable(filtered);
+    });
+
+    window.logout = function () {
+      localStorage.removeItem("role");
+      window.location.href = "index.html";
+    }
+
+    fetchRequests();
+  </script>
   <style>
     body {
       background-color: #f2f2f2;
@@ -21,6 +102,7 @@
       display: flex;
       justify-content: center;
       margin-top: 30px;
+      flex-direction: column;
     }
     table {
       width: 100%;
@@ -54,6 +136,13 @@
       color: white;
       cursor: pointer;
     }
+    #filterInput {
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
@@ -65,6 +154,7 @@
   </div>
 
   <div class="table-container">
+    <input type="text" id="filterInput" placeholder="Search by Req. No, Department, Status..." />
     <table id="company-table">
       <thead>
         <tr>
@@ -82,60 +172,5 @@
       </tbody>
     </table>
   </div>
-
-  <script>
-    const tableBody = document.querySelector("#company-table tbody");
-
-    function getRequests() {
-      return JSON.parse(localStorage.getItem("requests")) || [];
-    }
-
-    function saveRequests(data) {
-      localStorage.setItem("requests", JSON.stringify(data));
-    }
-
-    function renderCompanyTable() {
-      const data = getRequests();
-      tableBody.innerHTML = "";
-
-      data.forEach((item, index) => {
-        const row = document.createElement("tr");
-
-        row.innerHTML = `
-          <td>${item.reqNo}</td>
-          <td>${item.date}</td>
-          <td>${item.description}</td>
-          <td>${item.department}</td>
-          <td>
-            <select id="status-${index}">
-              <option value="In Progress" ${item.status === "In Progress" ? "selected" : ""}>In Progress</option>
-              <option value="Approved" ${item.status === "Approved" ? "selected" : ""}>Approved</option>
-              <option value="Rejected" ${item.status === "Rejected" ? "selected" : ""}>Rejected</option>
-            </select>
-          </td>
-          <td><input type="text" id="remarks-${index}" value="${item.remarks || ""}" /></td>
-          <td><button onclick="updateRequest(${index})">Update</button></td>
-        `;
-
-        tableBody.appendChild(row);
-      });
-    }
-
-    function updateRequest(index) {
-      const data = getRequests();
-      data[index].status = document.getElementById(`status-${index}`).value;
-      data[index].remarks = document.getElementById(`remarks-${index}`).value;
-      saveRequests(data);
-      alert("Request updated successfully!");
-      renderCompanyTable();
-    }
-
-    function logout() {
-      localStorage.clear();
-      window.location.href = "index.html";
-    }
-
-    renderCompanyTable();
-  </script>
 </body>
 </html>

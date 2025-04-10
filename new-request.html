@@ -2,252 +2,136 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>New Requisition</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>New Request</title>
   <link rel="stylesheet" href="style.css" />
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXLFjHMQISuunaqZzpjR6Hq0EZERa_Y0",
+      authDomain: "requisitionfollowup.firebaseapp.com",
+      projectId: "requisitionfollowup",
+      storageBucket: "requisitionfollowup.appspot.com",
+      messagingSenderId: "285248816511",
+      appId: "1:285248816511:web:543c18fe600f2fde88464a",
+      measurementId: "G-T5FGT3RCDL"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    document.getElementById("requestForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const reqNo = document.getElementById("reqNo").value;
+      const date = document.getElementById("date").value;
+      const description = document.getElementById("description").value;
+      const department = document.getElementById("department").value;
+
+      const newRequest = {
+        reqNo,
+        date,
+        description,
+        department,
+        status: "In Progress",
+        remarks: ""
+      };
+
+      await push(ref(db, "requests"), newRequest);
+
+      alert("Request submitted successfully!");
+      document.getElementById("requestForm").reset();
+    });
+
+    window.logout = function () {
+      localStorage.removeItem("role");
+      window.location.href = "index.html";
+    }
+  </script>
   <style>
     body {
-      background-color: #f2f2f2;
       font-family: sans-serif;
+      background-color: #f2f2f2;
       margin: 0;
-      padding: 0;
+      padding: 20px;
     }
-    .wrapper {
-      max-width: 1000px;
-      margin: 40px auto;
+    .form-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
       padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
-    form {
+    h1 {
       display: flex;
-      flex-direction: column;
-      gap: 15px;
+      justify-content: space-between;
+      align-items: center;
     }
     label {
+      display: block;
+      margin-top: 10px;
       font-weight: bold;
     }
-    input, select, textarea {
+    input, select {
+      width: 100%;
       padding: 10px;
+      margin-top: 5px;
       border-radius: 6px;
       border: 1px solid #ccc;
     }
     button {
+      margin-top: 20px;
+      width: 100%;
       padding: 10px;
       background-color: #007bff;
       color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
       font-weight: bold;
-    }
-    .table-container {
-      display: flex;
-      justify-content: center;
-      margin-top: 30px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-    }
-    th, td {
-      padding: 12px;
-      border: 1px solid #ccc;
-      text-align: left;
-      word-wrap: break-word;
-    }
-    th:nth-child(1) { width: 100px; }
-    th:nth-child(2) { width: 120px; }
-    th:nth-child(3) { width: 200px; }
-    th:nth-child(4) { width: 100px; }
-    th:nth-child(5) { width: 120px; }
-    th:nth-child(6) { width: 200px; }
-    th:nth-child(7) { width: 80px; }
-    th:nth-child(8) { width: 80px; }
-    .logout-btn {
-      padding: 8px 12px;
-      background-color: #dc3545;
       border: none;
       border-radius: 6px;
-      color: white;
       cursor: pointer;
-      float: right;
+    }
+    .top-actions {
+      display: flex;
+      justify-content: space-between;
+    }
+    .top-actions a {
+      color: #007bff;
+      text-decoration: none;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
-  <div class="wrapper">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <h1>New Requisition</h1>
-      <button onclick="logout()" class="logout-btn">Logout</button>
+  <div class="form-container">
+    <div class="top-actions">
+      <h1>New Request</h1>
+      <div>
+        <a href="change-password.html">Change Password</a>
+        <button onclick="logout()" style="margin-left: 10px;">Logout</button>
+      </div>
     </div>
+    <form id="requestForm">
+      <label for="reqNo">Requisition No</label>
+      <input type="text" id="reqNo" required />
 
-    <form id="request-form">
-      <div>
-        <label>Req. No</label>
-        <input type="text" id="reqNo" required />
-      </div>
-      <div>
-        <label>Request Date</label>
-        <input type="date" id="date" required />
-      </div>
-      <div>
-        <label>Description</label>
-        <input type="text" id="description" required />
-      </div>
-      <div>
-        <label>Department</label>
-        <select id="department" required>
-          <option value="ENG">ENG</option>
-          <option value="DECK">DECK</option>
-        </select>
-      </div>
-      <div>
-        <label>Remarks</label>
-        <textarea id="remarks"></textarea>
-      </div>
-      <button type="submit" id="submitBtn">Add Request</button>
+      <label for="date">Date</label>
+      <input type="date" id="date" required />
+
+      <label for="description">Description</label>
+      <input type="text" id="description" required />
+
+      <label for="department">Department</label>
+      <select id="department" required>
+        <option value="Engine">Engine</option>
+        <option value="Deck">Deck</option>
+        <option value="Galley">Galley</option>
+      </select>
+
+      <button type="submit">Submit Request</button>
     </form>
-
-    <h2 style="margin-top: 40px; text-align: center;">Previous Requests</h2>
-
-    <div style="text-align: center; margin-bottom: 20px;">
-      <label for="csvFile" style="font-weight: bold; margin-right: 10px;">Import CSV:</label>
-      <input type="file" id="csvFile" accept=".csv" />
-    </div>
   </div>
-
-  <div class="table-container">
-    <table id="request-table">
-      <thead>
-        <tr>
-          <th>Req. No</th>
-          <th>Date</th>
-          <th>Description</th>
-          <th>Department</th>
-          <th>Status</th>
-          <th>Remarks</th>
-          <th>Delete</th>
-          <th>Edit</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- JS ile doldurulacak -->
-      </tbody>
-    </table>
-  </div>
-
-  <script>
-    const form = document.getElementById("request-form");
-    const tableBody = document.querySelector("#request-table tbody");
-    const submitBtn = document.getElementById("submitBtn");
-    let editIndex = null;
-
-    function getRequests() {
-      return JSON.parse(localStorage.getItem("requests")) || [];
-    }
-
-    function saveRequests(data) {
-      localStorage.setItem("requests", JSON.stringify(data));
-    }
-
-    function renderTable() {
-      const data = getRequests();
-      tableBody.innerHTML = "";
-      data.forEach((item, index) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${item.reqNo}</td>
-          <td>${item.date}</td>
-          <td>${item.description}</td>
-          <td>${item.department}</td>
-          <td>${item.status}</td>
-          <td>${item.remarks}</td>
-          <td><button onclick="deleteRequest(${index})" style="background:red;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;">Sil</button></td>
-          <td><button onclick="editRequest(${index})" style="background:orange;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;">Edit</button></td>
-        `;
-        tableBody.appendChild(row);
-      });
-    }
-
-    function deleteRequest(index) {
-      const confirmDelete = confirm("Bu isteği silmek istediğine emin misin?");
-      if (!confirmDelete) return;
-
-      const data = getRequests();
-      data.splice(index, 1);
-      saveRequests(data);
-      renderTable();
-    }
-
-    function editRequest(index) {
-      const data = getRequests()[index];
-      document.getElementById("reqNo").value = data.reqNo;
-      document.getElementById("date").value = data.date;
-      document.getElementById("description").value = data.description;
-      document.getElementById("department").value = data.department;
-      document.getElementById("remarks").value = data.remarks;
-      submitBtn.textContent = "Update Request";
-      editIndex = index;
-    }
-
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-
-      const newItem = {
-        reqNo: document.getElementById("reqNo").value,
-        date: document.getElementById("date").value,
-        description: document.getElementById("description").value,
-        department: document.getElementById("department").value,
-        status: editIndex !== null ? getRequests()[editIndex].status : "In Progress",
-        remarks: document.getElementById("remarks").value
-      };
-
-      const existing = getRequests();
-
-      if (editIndex !== null) {
-        existing[editIndex] = newItem;
-        alert("Requisition updated!");
-        submitBtn.textContent = "Add Request";
-        editIndex = null;
-      } else {
-        existing.push(newItem);
-        alert("Requisition added!");
-      }
-
-      saveRequests(existing);
-      form.reset();
-      renderTable();
-    });
-
-    document.getElementById("csvFile").addEventListener("change", function (e) {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const lines = e.target.result.split("\n").filter(Boolean);
-        const data = getRequests();
-
-        for (let i = 1; i < lines.length; i++) {
-          const [reqNo, date, description, department, status, remarks] = lines[i].split(",").map(s => s.trim());
-          if (reqNo && date) {
-            data.push({ reqNo, date, description, department, status, remarks });
-          }
-        }
-
-        saveRequests(data);
-        renderTable();
-        alert("CSV imported!");
-      };
-      reader.readAsText(file);
-    });
-
-    function logout() {
-      localStorage.clear();
-      window.location.href = "index.html";
-    }
-
-    renderTable();
-  </script>
 </body>
 </html>

@@ -1,172 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Incoming Supplies</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supplies Overview</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+    import { getDatabase, ref, get, child, push } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+
+    import jsPDF from "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    import * as XLSX from "https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXLFjHMQISuunaqZzpjR6Hq0EZERa_Y0",
+      authDomain: "requisitionfollowup.firebaseapp.com",
+      projectId: "requisitionfollowup",
+      storageBucket: "requisitionfollowup.appspot.com",
+      messagingSenderId: "285248816511",
+      appId: "1:285248816511:web:543c18fe600f2fde88464a",
+      measurementId: "G-T5FGT3RCDL"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const tableBody = document.querySelector("#supplies-table tbody");
+    let suppliesData = [];
+
+    function renderSuppliesTable(data) {
+      tableBody.innerHTML = "";
+      suppliesData = [];
+      Object.entries(data).forEach(([_, item]) => {
+        if (item.status === "Approved" && item.received) {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${item.reqNo}</td>
+            <td>${item.date}</td>
+            <td>${item.description}</td>
+            <td>${item.department}</td>
+            <td>${item.status}</td>
+            <td>${item.remarks || ""}</td>
+          `;
+          tableBody.appendChild(row);
+
+          suppliesData.push({
+            ReqNo: item.reqNo,
+            Date: item.date,
+            Description: item.description,
+            Department: item.department,
+            Status: item.status,
+            Remarks: item.remarks || "",
+            Received: item.received || false
+          });
+        }
+      });
+    }
+
+    async function fetchSupplies() {
+      const dbRef = ref(db);
+      const snapshot = await get(child(dbRef, "requests"));
+      if (snapshot.exists()) {
+        renderSuppliesTable(snapshot.val());
+      } else {
+        tableBody.innerHTML = '<tr><td colspan="6">No approved & received requests found.</td></tr>';
+      }
+    }
+
+    document.getElementById("exportPDF").addEventListener("click", () => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.text("Supplies Overview", 10, 10);
+      let y = 20;
+      suppliesData.forEach((item, index) => {
+        doc.text(`${index + 1}. ${item.ReqNo}, ${item.Date}, ${item.Description}, ${item.Department}, ${item.Status}, ${item.Remarks}`, 10, y);
+        y += 10;
+      });
+      doc.save("supplies.pdf");
+    });
+
+    document.getElementById("exportExcel").addEventListener("click", () => {
+      const worksheet = XLSX.utils.json_to_sheet(suppliesData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Supplies");
+      XLSX.writeFile(workbook, "supplies.xlsx");
+    });
+
+    document.getElementById("importFile").addEventListener("change", function (e) {
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet);
+
+        json.forEach(entry => {
+          const newRequest = {
+            reqNo: entry.ReqNo || "",
+            date: entry.Date || "",
+            description: entry.Description || "",
+            department: entry.Department || "",
+            status: entry.Status || "In Progress",
+            remarks: entry.Remarks || "",
+            received: entry.Received === true || entry.Received === "TRUE" || false
+          };
+          push(ref(db, "requests"), newRequest);
+        });
+
+        alert("Data imported successfully!");
+        fetchSupplies();
+      };
+      reader.readAsArrayBuffer(e.target.files[0]);
+    });
+
+    fetchSupplies();
+  </script>
   <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f2f2f2;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .export-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px 0;
+    }
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 6px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    input[type="file"] {
+      margin-top: 10px;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
     }
-
     th, td {
-      padding: 10px;
+      padding: 12px;
       border: 1px solid #ccc;
       text-align: left;
     }
-
     th {
       background-color: #f0f0f0;
-    }
-
-    .status {
-      font-weight: bold;
-      color: green;
-    }
-
-    .filter-bar {
-      margin: 20px 0;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    select, input {
-      padding: 6px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-    }
-
-    .btn-receive {
-      background-color: #007bff;
-      color: white;
-      border: none;
-      padding: 6px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .btn-receive:disabled {
-      background-color: #ccc;
-      cursor: default;
-    }
-
-    .logout-btn {
-      padding: 8px 12px;
-      background-color: #dc3545;
-      border: none;
-      border-radius: 6px;
-      color: white;
-      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <h1>Incoming Supplies</h1>
-      <button onclick="logout()" class="logout-btn">Logout</button>
-    </div>
-
-    <div class="filter-bar">
-      <input type="text" id="search" placeholder="Search by description..." />
-      <select id="statusFilter">
-        <option value="all">All</option>
-        <option value="Approved">Approved</option>
-        <option value="Received">Received</option>
-      </select>
-    </div>
-
-    <table id="supplies-table">
-      <thead>
-        <tr>
-          <th>Req. No</th>
-          <th>Request Date</th>
-          <th>Description</th>
-          <th>Department</th>
-          <th>Status</th>
-          <th>Remarks</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- JS ile doldurulacak -->
-      </tbody>
-    </table>
+  <h1>Supplies Overview</h1>
+  <div class="export-buttons">
+    <button id="exportPDF">Export as PDF</button>
+    <button id="exportExcel">Export as Excel</button>
+    <input type="file" id="importFile" accept=".xlsx,.xls" />
   </div>
-
-  <script>
-    let allData = JSON.parse(localStorage.getItem("requests")) || [];
-
-    const tableBody = document.querySelector("#supplies-table tbody");
-    const searchInput = document.getElementById("search");
-    const statusFilter = document.getElementById("statusFilter");
-
-    function saveData() {
-      localStorage.setItem("requests", JSON.stringify(allData));
-    }
-
-    function markAsReceived(index) {
-      allData[index].status = "Received";
-      saveData();
-      filterAndRender();
-    }
-
-    function renderTable(data) {
-      tableBody.innerHTML = "";
-      data.forEach((item, index) => {
-        const row = document.createElement("tr");
-
-        const actionBtn = (item.status === "Approved") ?
-          `<button class="btn-receive" onclick="markAsReceived(${item._originalIndex})">Mark as Received</button>` :
-          `<button class="btn-receive" disabled>Received</button>`;
-
-        row.innerHTML = `
-          <td>${item.reqNo}</td>
-          <td>${item.date}</td>
-          <td>${item.description}</td>
-          <td>${item.department}</td>
-          <td class="status">${item.status}</td>
-          <td>${item.remarks}</td>
-          <td>${actionBtn}</td>
-        `;
-        tableBody.appendChild(row);
-      });
-    }
-
-    function filterAndRender() {
-      const keyword = searchInput.value.toLowerCase();
-      const selectedStatus = statusFilter.value;
-
-      const dataWithIndex = allData.map((item, i) => ({ ...item, _originalIndex: i }));
-
-      let filtered = dataWithIndex;
-
-      if (selectedStatus !== "all") {
-        filtered = filtered.filter(item => item.status === selectedStatus);
-      }
-
-      if (keyword) {
-        filtered = filtered.filter(item =>
-          item.description.toLowerCase().includes(keyword)
-        );
-      }
-
-      renderTable(filtered);
-    }
-
-    function logout() {
-      localStorage.clear();
-      window.location.href = "index.html";
-    }
-
-    searchInput.addEventListener("input", filterAndRender);
-    statusFilter.addEventListener("change", filterAndRender);
-
-    filterAndRender();
-  </script>
+  <table id="supplies-table">
+    <thead>
+      <tr>
+        <th>Req. No</th>
+        <th>Date</th>
+        <th>Description</th>
+        <th>Department</th>
+        <th>Status</th>
+        <th>Remarks</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Data will be populated here -->
+    </tbody>
+  </table>
 </body>
 </html>
