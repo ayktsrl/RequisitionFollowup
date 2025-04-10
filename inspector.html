@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Inspector Panel</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+    select {
+      padding: 5px;
+      border-radius: 4px;
+    }
+    .status-cell {
+      font-weight: bold;
+    }
+    .btn-save {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .logout-btn {
+      padding: 8px 12px;
+      background-color: #dc3545;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h1>Inspector Panel</h1>
+      <button onclick="logout()" class="logout-btn">Logout</button>
+    </div>
+
+    <table id="requests-table">
+      <thead>
+        <tr>
+          <th>Req. No</th>
+          <th>Request Date</th>
+          <th>Description</th>
+          <th>Department</th>
+          <th>Status</th>
+          <th>Remarks</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- JS ile doldurulacak -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const defaultData = [
+      {
+        reqNo: "SPR-05-2022",
+        date: "2022-07-17",
+        description: "AUXILIARY BOILER PILOT BURNER SPARES",
+        department: "ENG",
+        status: "In Progress",
+        remarks: "Urgent"
+      },
+      {
+        reqNo: "SPR-08-2022",
+        date: "2022-08-01",
+        description: "LO FILTER SPARES",
+        department: "ENG",
+        status: "Approved",
+        remarks: ""
+      }
+    ];
+
+    let requestData = JSON.parse(localStorage.getItem("requests")) || defaultData;
+
+    const tableBody = document.querySelector("#requests-table tbody");
+
+    function renderTable() {
+      tableBody.innerHTML = "";
+      requestData.forEach((item, index) => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+          <td>${item.reqNo}</td>
+          <td>${item.date}</td>
+          <td>${item.description}</td>
+          <td>${item.department}</td>
+          <td>
+            <select id="status-${index}">
+              <option ${item.status === "In Progress" ? "selected" : ""}>In Progress</option>
+              <option ${item.status === "Approved" ? "selected" : ""}>Approved</option>
+              <option ${item.status === "Received" ? "selected" : ""}>Received</option>
+            </select>
+          </td>
+          <td>${item.remarks}</td>
+          <td><button class="btn-save" onclick="saveStatus(${index})">Save</button></td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    function saveStatus(index) {
+      const select = document.getElementById(`status-${index}`);
+      requestData[index].status = select.value;
+
+      localStorage.setItem("requests", JSON.stringify(requestData));
+
+      alert(`Status updated to "${select.value}" for ${requestData[index].reqNo}`);
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = "index.html";
+    }
+
+    renderTable();
+  </script>
+</body>
+</html>
