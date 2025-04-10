@@ -30,17 +30,16 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
     import { getDatabase, ref, child, get } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBXLFjHMQISuunaqZzpjR6Hq0EZERa_Y0",
-      authDomain: "requisitionfollowup.firebaseapp.com",
-      projectId: "requisitionfollowup",
-      storageBucket: "requisitionfollowup.appspot.com",
-      messagingSenderId: "285248816511",
-      appId: "1:285248816511:web:543c18fe600f2fde88464a",
-      measurementId: "G-T5FGT3RCDL"
-  databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
-
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyBXLFjHMQISuunaqZzpjR6Hq0EZERa_Y0",
+  authDomain: "requisitionfollowup.firebaseapp.com",
+  projectId: "requisitionfollowup",
+  storageBucket: "requisitionfollowup.appspot.com",
+  messagingSenderId: "285248816511",
+  appId: "1:285248816511:web:543c18fe600f2fde88464a",
+  measurementId: "G-T5FGT3RCDL",
+  databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com"
+};
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
