@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Requisition Login</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Login</h1>
+    
+    <div class="role-switch">
+      <button onclick="selectRole('ship')" id="btn-ship" class="login-type-btn active">Ship</button>
+      <button onclick="selectRole('inspector')" id="btn-inspector" class="login-type-btn">Inspector</button>
+    </div>
+
+    <form id="login-form">
+      <div id="ship-fields">
+        <input type="text" id="shipName" placeholder="Ship Name" required />
+        <input type="password" id="shipPass" placeholder="Password" required />
+      </div>
+
+      <div id="user-fields" style="display: none;">
+        <input type="email" id="inspectorEmail" placeholder="Email" required />
+        <input type="password" id="inspectorPass" placeholder="Password" required />
+      </div>
+
+      <button type="submit">Login</button>
+    </form>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+    import { getDatabase, ref, child, get } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXLFjHMQISuunaqZzpjR6Hq0EZERa_Y0",
+      authDomain: "requisitionfollowup.firebaseapp.com",
+      projectId: "requisitionfollowup",
+      storageBucket: "requisitionfollowup.appspot.com",
+      messagingSenderId: "285248816511",
+      appId: "1:285248816511:web:543c18fe600f2fde88464a",
+      measurementId: "G-T5FGT3RCDL"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let selectedRole = "ship";
+
+    window.selectRole = function(role) {
+      selectedRole = role;
+      const shipBtn = document.getElementById("btn-ship");
+      const inspectorBtn = document.getElementById("btn-inspector");
+
+      shipBtn.classList.remove("active");
+      inspectorBtn.classList.remove("active");
+
+      if (role === "ship") {
+        shipBtn.classList.add("active");
+        document.getElementById("ship-fields").style.display = "block";
+        document.getElementById("user-fields").style.display = "none";
+      } else {
+        inspectorBtn.classList.add("active");
+        document.getElementById("ship-fields").style.display = "none";
+        document.getElementById("user-fields").style.display = "block";
+      }
+    }
+
+    const form = document.getElementById("login-form");
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      localStorage.setItem("role", selectedRole);
+
+      const dbRef = ref(db);
+
+      if (selectedRole === "ship") {
+        const shipName = document.getElementById("shipName").value;
+        const shipPass = document.getElementById("shipPass").value;
+        const snapshot = await get(child(dbRef, `users/${shipName}`));
+        if (snapshot.exists()) {
+          const user = snapshot.val();
+          if (user.type === "ship" && user.password === shipPass) {
+            window.location.href = "new-request.html";
+          } else {
+            alert("Invalid ship credentials.");
+          }
+        } else {
+          alert("Ship not found.");
+        }
+      } else if (selectedRole === "inspector") {
+        const email = document.getElementById("inspectorEmail").value;
+        const pass = document.getElementById("inspectorPass").value;
+
+        if (email === "aykutsaral@gmail.com" && pass === "135246") {
+          window.location.href = "admin-panel.html";
+          return;
+        }
+
+        const snapshot = await get(child(dbRef, `users/${email}`));
+        if (snapshot.exists()) {
+          const user = snapshot.val();
+          if (user.type === "inspector" && user.password === pass) {
+            window.location.href = "inspector.html";
+          } else {
+            alert("Invalid inspector credentials.");
+          }
+        } else {
+          alert("Inspector not found.");
+        }
+      }
+    });
+  </script>
+</body>
+</html>
