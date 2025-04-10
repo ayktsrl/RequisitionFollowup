@@ -1,11 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>New Request</title>
-  <link rel="stylesheet" href="style.css" />
-  <script type="module">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>New Request</title>
+<link href="style.css" rel="stylesheet"/>
+<script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
     import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
 
@@ -17,6 +18,8 @@
       messagingSenderId: "285248816511",
       appId: "1:285248816511:web:543c18fe600f2fde88464a",
       measurementId: "G-T5FGT3RCDL"
+  databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
+
     };
 
     const app = initializeApp(firebaseConfig);
@@ -37,6 +40,8 @@
         department,
         status: "In Progress",
         remarks: ""
+  databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
+
       };
 
       await push(ref(db, "requests"), newRequest);
@@ -50,7 +55,7 @@
       window.location.href = "index.html";
     }
   </script>
-  <style>
+<style>
     body {
       font-family: sans-serif;
       background-color: #f2f2f2;
@@ -105,33 +110,29 @@
   </style>
 </head>
 <body>
-  <div class="form-container">
-    <div class="top-actions">
-      <h1>New Request</h1>
-      <div>
-        <a href="change-password.html">Change Password</a>
-        <button onclick="logout()" style="margin-left: 10px;">Logout</button>
-      </div>
-    </div>
-    <form id="requestForm">
-      <label for="reqNo">Requisition No</label>
-      <input type="text" id="reqNo" required />
-
-      <label for="date">Date</label>
-      <input type="date" id="date" required />
-
-      <label for="description">Description</label>
-      <input type="text" id="description" required />
-
-      <label for="department">Department</label>
-      <select id="department" required>
-        <option value="Engine">Engine</option>
-        <option value="Deck">Deck</option>
-        <option value="Galley">Galley</option>
-      </select>
-
-      <button type="submit">Submit Request</button>
-    </form>
-  </div>
+<div class="form-container">
+<div class="top-actions">
+<h1>New Request</h1>
+<div>
+<a href="change-password.html">Change Password</a>
+<button onclick="logout()" style="margin-left: 10px;">Logout</button>
+</div>
+</div>
+<form id="requestForm">
+<label for="reqNo">Requisition No</label>
+<input id="reqNo" required="" type="text"/>
+<label for="date">Date</label>
+<input id="date" required="" type="date"/>
+<label for="description">Description</label>
+<input id="description" required="" type="text"/>
+<label for="department">Department</label>
+<select id="department" required="">
+<option value="Engine">Engine</option>
+<option value="Deck">Deck</option>
+<option value="Galley">Galley</option>
+</select>
+<button type="submit">Submit Request</button>
+</form>
+</div>
 </body>
 </html>

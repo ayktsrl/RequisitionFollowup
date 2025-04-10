@@ -1,11 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Inspector Panel</title>
-  <link rel="stylesheet" href="style.css" />
-  <script type="module">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Inspector Panel</title>
+<link href="style.css" rel="stylesheet"/>
+<script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
     import { getDatabase, ref, get, child, update } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
 
@@ -17,6 +18,8 @@
       messagingSenderId: "285248816511",
       appId: "1:285248816511:web:543c18fe600f2fde88464a",
       measurementId: "G-T5FGT3RCDL"
+  databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
+
     };
 
     const app = initializeApp(firebaseConfig);
@@ -78,7 +81,7 @@
 
     fetchRequests();
   </script>
-  <style>
+<style>
     body {
       background-color: #f2f2f2;
       font-family: sans-serif;
@@ -138,31 +141,30 @@
   </style>
 </head>
 <body>
-  <div class="wrapper">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <h1>Inspector Panel</h1>
-      <button onclick="logout()" class="logout-btn">Logout</button>
-    </div>
-  </div>
-
-  <div class="table-container">
-    <input type="text" id="filterInput" placeholder="Search by Req. No, Department, Status..." />
-    <table id="inspector-table">
-      <thead>
-        <tr>
-          <th>Req. No</th>
-          <th>Date</th>
-          <th>Description</th>
-          <th>Department</th>
-          <th>Status</th>
-          <th>Remarks</th>
-          <th>Received</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- JavaScript ile doldurulacak -->
-      </tbody>
-    </table>
-  </div>
+<div class="wrapper">
+<div style="display: flex; justify-content: space-between; align-items: center;">
+<h1>Inspector Panel</h1>
+<button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+</div>
+<div class="table-container">
+<input id="filterInput" placeholder="Search by Req. No, Department, Status..." type="text"/>
+<table id="inspector-table">
+<thead>
+<tr>
+<th>Req. No</th>
+<th>Date</th>
+<th>Description</th>
+<th>Department</th>
+<th>Status</th>
+<th>Remarks</th>
+<th>Received</th>
+</tr>
+</thead>
+<tbody>
+<!-- JavaScript ile doldurulacak -->
+</tbody>
+</table>
+</div>
 </body>
 </html>
