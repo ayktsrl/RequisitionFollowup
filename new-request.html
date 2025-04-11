@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>New Request</title>
-<link href="style.css" rel="stylesheet"/>
-<script type="module">
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>New Request</title>
+  <link href="style.css" rel="stylesheet"/>
+  <script type="module">
     // Sadece "ship" kullanıcıları erişebilsin
     if (localStorage.getItem("role") !== "ship") {
       window.location.href = "index.html";
@@ -17,7 +17,7 @@
     const firebaseConfig = {
       apiKey: "AIzaSyBXLFjHMQISuunaqZzpjR6Hq0EZERa_Y0",
       authDomain: "requisitionfollowup.firebaseapp.com",
-databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
+      databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
       projectId: "requisitionfollowup",
       storageBucket: "requisitionfollowup.appspot.com",
       messagingSenderId: "285248816511",
@@ -36,13 +36,16 @@ databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
       const description = document.getElementById("description").value;
       const department = document.getElementById("department").value;
 
+      const createdBy = localStorage.getItem("ship") || "unknown-ship";
+
       const newRequest = {
         reqNo,
         date,
         description,
         department,
         status: "In Progress",
-        remarks: ""
+        remarks: "",
+        createdBy // ✅ GEMİ BİLGİSİ
       };
 
       await push(ref(db, "requests"), newRequest);
@@ -53,87 +56,91 @@ databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
 
     window.logout = function () {
       localStorage.removeItem("role");
+      localStorage.removeItem("ship");
       window.location.href = "index.html";
     }
-</script>
-<style>
-  body {
-    font-family: sans-serif;
-    background-color: #f2f2f2;
-    margin: 0;
-    padding: 20px;
-  }
-  .form-container {
-    max-width: 600px;
-    margin: 0 auto;
-    background: white;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  }
-  h1 {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  label {
-    display: block;
-    margin-top: 10px;
-    font-weight: bold;
-  }
-  input, select {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-  }
-  button {
-    margin-top: 20px;
-    width: 100%;
-    padding: 10px;
-    background-color: #007bff;
-    color: white;
-    font-weight: bold;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  .top-actions {
-    display: flex;
-    justify-content: space-between;
-  }
-  .top-actions a {
-    color: #007bff;
-    text-decoration: none;
-    font-size: 14px;
-  }
-</style>
+  </script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+    }
+    .form-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 10px;
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .top-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .top-actions a {
+      color: #007bff;
+      text-decoration: none;
+      font-size: 14px;
+      margin-left: 10px;
+    }
+  </style>
 </head>
 <body>
-<div class="form-container">
-  <div class="top-actions">
-    <h1>New Request</h1>
-    <div>
-      <a href="change-password.html">Change Password</a>
-      <button onclick="logout()" style="margin-left: 10px;">Logout</button>
+  <div class="form-container">
+    <div class="top-actions">
+      <h1>New Request</h1>
+      <div>
+        <a href="ship-requests.html">My Requests</a>
+        <a href="change-password.html">Change Password</a>
+        <button onclick="logout()" style="margin-left: 10px;">Logout</button>
+      </div>
     </div>
+    <form id="requestForm">
+      <label for="reqNo">Requisition No</label>
+      <input id="reqNo" required type="text"/>
+      <label for="date">Date</label>
+      <input id="date" required type="date"/>
+      <label for="description">Description</label>
+      <input id="description" required type="text"/>
+      <label for="department">Department</label>
+      <select id="department" required>
+        <option value="Engine">Engine</option>
+        <option value="Deck">Deck</option>
+        <option value="Galley">Galley</option>
+      </select>
+      <button type="submit">Submit Request</button>
+    </form>
   </div>
-  <form id="requestForm">
-    <label for="reqNo">Requisition No</label>
-    <input id="reqNo" required type="text"/>
-    <label for="date">Date</label>
-    <input id="date" required type="date"/>
-    <label for="description">Description</label>
-    <input id="description" required type="text"/>
-    <label for="department">Department</label>
-    <select id="department" required>
-      <option value="Engine">Engine</option>
-      <option value="Deck">Deck</option>
-      <option value="Galley">Galley</option>
-    </select>
-    <button type="submit">Submit Request</button>
-  </form>
-</div>
 </body>
 </html>
