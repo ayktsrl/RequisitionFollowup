@@ -89,10 +89,10 @@
         const email = document.getElementById("inspectorEmail").value;
         const pass = document.getElementById("inspectorPass").value;
 
-        if (email === "aykutsaral@gmail.com" && pass === "135246") {
-          window.location.href = "admin-panel.html";
-          return;
-        }
+if (email === "aykutsaral@gmail.com" && pass === "135246") {
+  window.location.href = "admin-dashboard.html";
+  return;
+}
 
         const snapshot = await get(child(dbRef, `users/${email}`));
         if (snapshot.exists()) {

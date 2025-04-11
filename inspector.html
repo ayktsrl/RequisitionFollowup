@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
@@ -7,6 +6,11 @@
 <title>Inspector Panel</title>
 <link href="style.css" rel="stylesheet"/>
 <script type="module">
+    // Sadece inspector girebilsin
+    if (localStorage.getItem("role") !== "inspector") {
+      window.location.href = "index.html";
+    }
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
     import { getDatabase, ref, get, child, update } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
 
@@ -47,6 +51,7 @@
       const received = document.getElementById(`received-${key}`).checked;
       const requestRef = ref(db, `requests/${key}`);
       await update(requestRef, { received });
+      fetchRequests(); // tabloyu yenile
     }
 
     async function fetchRequests() {
@@ -78,91 +83,91 @@
     }
 
     fetchRequests();
-  </script>
+</script>
 <style>
-    body {
-      background-color: #f2f2f2;
-      font-family: sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-    .wrapper {
-      max-width: 1000px;
-      margin: 40px auto;
-      padding: 30px;
-    }
-    .table-container {
-      display: flex;
-      justify-content: center;
-      margin-top: 30px;
-      flex-direction: column;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-    }
-    th, td {
-      padding: 12px;
-      border: 1px solid #ccc;
-      text-align: left;
-      word-wrap: break-word;
-    }
-    select, input {
-      padding: 6px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-    }
-    button {
-      padding: 6px 10px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      background-color: #28a745;
-      color: white;
-    }
-    .logout-btn {
-      padding: 8px 12px;
-      background-color: #dc3545;
-      border: none;
-      border-radius: 6px;
-      color: white;
-      cursor: pointer;
-    }
-    #filterInput {
-      padding: 10px;
-      margin-bottom: 20px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      width: 100%;
-    }
-  </style>
+  body {
+    background-color: #f2f2f2;
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  .wrapper {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 30px;
+  }
+  .table-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    flex-direction: column;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  th, td {
+    padding: 12px;
+    border: 1px solid #ccc;
+    text-align: left;
+    word-wrap: break-word;
+  }
+  select, input {
+    padding: 6px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
+  button {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #28a745;
+    color: white;
+  }
+  .logout-btn {
+    padding: 8px 12px;
+    background-color: #dc3545;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+  }
+  #filterInput {
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    width: 100%;
+  }
+</style>
 </head>
 <body>
 <div class="wrapper">
-<div style="display: flex; justify-content: space-between; align-items: center;">
-<h1>Inspector Panel</h1>
-<button class="logout-btn" onclick="logout()">Logout</button>
-</div>
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <h1>Inspector Panel</h1>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
 </div>
 <div class="table-container">
-<input id="filterInput" placeholder="Search by Req. No, Department, Status..." type="text"/>
-<table id="inspector-table">
-<thead>
-<tr>
-<th>Req. No</th>
-<th>Date</th>
-<th>Description</th>
-<th>Department</th>
-<th>Status</th>
-<th>Remarks</th>
-<th>Received</th>
-</tr>
-</thead>
-<tbody>
-<!-- JavaScript ile doldurulacak -->
-</tbody>
-</table>
+  <input id="filterInput" placeholder="Search by Req. No, Department, Status..." type="text"/>
+  <table id="inspector-table">
+    <thead>
+      <tr>
+        <th>Req. No</th>
+        <th>Date</th>
+        <th>Description</th>
+        <th>Department</th>
+        <th>Status</th>
+        <th>Remarks</th>
+        <th>Received</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- JavaScript ile doldurulacak -->
+    </tbody>
+  </table>
 </div>
 </body>
 </html>
