@@ -1,99 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta charset="UTF-8" />
   <title>New Request</title>
-  <link href="style.css" rel="stylesheet"/>
-  <style>
-    .form-container {
-      max-width: 600px;
-      margin: 40px auto;
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-
-    input, select {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-
-    button {
-      margin-top: 20px;
-      width: 100%;
-      padding: 10px;
-      background-color: #007bff;
-      color: white;
-      font-weight: bold;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .list-container {
-      max-width: 90%;
-      margin: 40px auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-
-    th, td {
-      padding: 10px;
-      text-align: left;
-      border-bottom: 1px solid #ccc;
-    }
-
-    th {
-      background-color: #007bff;
-      color: white;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
-  <!-- 🔹 Navigasyon -->
   <div class="nav">
     <a href="new-request.html">New Request</a>
     <a href="ship-requests.html">My Requests</a>
     <a href="change-password.html">Change Password</a>
     <a href="index.html" onclick="logout()">Logout</a>
   </div>
-
   <div class="form-container">
-    <h1>New Request</h1>
+    <h2>New Request</h2>
     <form id="requestForm">
-      <label for="reqNo">Requisition No</label>
-      <input id="reqNo" required type="text"/>
-      <label for="date">Date</label>
-      <input id="date" required type="date"/>
-      <label for="description">Description</label>
-      <input id="description" required type="text"/>
-      <label for="department">Department</label>
-      <select id="department" required>
+      <input type="text" id="reqNo" placeholder="Requisition No" required />
+      <input type="date" id="date" required />
+      <input type="text" id="description" placeholder="Description" required />
+      <select id="department">
         <option value="Engine">Engine</option>
         <option value="Deck">Deck</option>
         <option value="Galley">Galley</option>
@@ -102,9 +27,9 @@
     </form>
   </div>
 
-  <div class="list-container">
-    <h2 style="text-align:center;">Previous Requests</h2>
-    <table id="requestTable">
+  <div class="table-container">
+    <h2 style="text-align: center;">Previous Requests</h2>
+    <table>
       <thead>
         <tr>
           <th>Req. No</th>
@@ -113,21 +38,16 @@
           <th>Department</th>
           <th>Status</th>
           <th>Remarks</th>
+          <th>Actions</th>
         </tr>
       </thead>
-      <tbody>
-        <!-- Talepler burada listelenecek -->
-      </tbody>
+      <tbody id="requestTableBody"></tbody>
     </table>
   </div>
 
   <script type="module">
-    if (localStorage.getItem("role") !== "ship") {
-      window.location.href = "index.html";
-    }
-
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-    import { getDatabase, ref, push, get, child } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+    import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBXLFjHMQISuunaqZzpjR6Hq0EZERa_Y0",
@@ -142,58 +62,81 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const currentShip = localStorage.getItem("ship") || "unknown-ship";
+    const ship = localStorage.getItem("ship") || "anonymous";
 
-    document.getElementById("requestForm").addEventListener("submit", async function (e) {
+    const form = document.getElementById("requestForm");
+    const tbody = document.getElementById("requestTableBody");
+
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
-
       const reqNo = document.getElementById("reqNo").value;
       const date = document.getElementById("date").value;
       const description = document.getElementById("description").value;
       const department = document.getElementById("department").value;
 
-      const newRequest = {
+      await push(ref(db, "requests"), {
         reqNo,
         date,
         description,
         department,
         status: "In Progress",
         remarks: "",
-        createdBy: currentShip
-      };
+        createdBy: ship
+      });
 
-      await push(ref(db, "requests"), newRequest);
-      alert("Request submitted successfully!");
-      document.getElementById("requestForm").reset();
-      loadRequests();
+      form.reset();
     });
 
-    async function loadRequests() {
-      const snapshot = await get(child(ref(db), "requests"));
-      const tbody = document.querySelector("#requestTable tbody");
-      tbody.innerHTML = "";
-
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        Object.values(data).forEach(req => {
-          if (req.createdBy === currentShip) {
+    function loadRequests() {
+      const requestsRef = ref(db, "requests");
+      onValue(requestsRef, (snapshot) => {
+        tbody.innerHTML = "";
+        snapshot.forEach((childSnapshot) => {
+          const key = childSnapshot.key;
+          const data = childSnapshot.val();
+          if (data.createdBy === ship) {
             const row = document.createElement("tr");
             row.innerHTML = `
-              <td>${req.reqNo}</td>
-              <td>${req.date}</td>
-              <td>${req.description}</td>
-              <td>${req.department}</td>
-              <td>${req.status}</td>
-              <td>${req.remarks || ""}</td>
+              <td><input type="text" id="reqno-${key}" value="${data.reqNo}" disabled /></td>
+              <td><input type="date" id="date-${key}" value="${data.date}" disabled /></td>
+              <td><input type="text" id="desc-${key}" value="${data.description}" disabled /></td>
+              <td><input type="text" id="dept-${key}" value="${data.department}" disabled /></td>
+              <td><input type="text" id="status-${key}" value="${data.status}" disabled /></td>
+              <td><input type="text" id="remarks-${key}" value="${data.remarks || ''}" disabled /></td>
+              <td>
+                <button onclick="enableEdit('${key}')">Edit</button>
+                <button onclick="updateRequest('${key}')" style="display:none">Update</button>
+                <button onclick="deleteRequest('${key}')">Remove</button>
+              </td>
             `;
             tbody.appendChild(row);
           }
         });
-      } else {
-        const row = document.createElement("tr");
-        row.innerHTML = `<td colspan="6">No previous requests.</td>`;
-        tbody.appendChild(row);
-      }
+      });
+    }
+
+    window.enableEdit = function (key) {
+      ['reqno', 'date', 'desc', 'dept', 'status', 'remarks'].forEach(field => {
+        document.getElementById(`${field}-${key}`).disabled = false;
+      });
+      document.querySelector(`button[onclick="enableEdit('${key}')"]`).style.display = 'none';
+      document.querySelector(`button[onclick="updateRequest('${key}')"]`).style.display = 'inline-block';
+    }
+
+    window.updateRequest = function (key) {
+      const updatedData = {
+        reqNo: document.getElementById(`reqno-${key}`).value,
+        date: document.getElementById(`date-${key}`).value,
+        description: document.getElementById(`desc-${key}`).value,
+        department: document.getElementById(`dept-${key}`).value,
+        status: document.getElementById(`status-${key}`).value,
+        remarks: document.getElementById(`remarks-${key}`).value
+      };
+      update(ref(db, `requests/${key}`), updatedData);
+    }
+
+    window.deleteRequest = function (key) {
+      remove(ref(db, `requests/${key}`));
     }
 
     function logout() {
