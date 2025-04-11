@@ -5,6 +5,23 @@
   <title>My Requests</title>
   <link rel="stylesheet" href="style.css" />
   <style>
+    .nav {
+      background-color: #007bff;
+      padding: 12px 20px;
+      display: flex;
+      gap: 15px;
+      justify-content: flex-end;
+      border-bottom: 1px solid #ddd;
+    }
+    .nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .nav a:hover {
+      text-decoration: underline;
+    }
+
     body {
       font-family: sans-serif;
       background-color: #f2f2f2;
@@ -43,6 +60,14 @@
   </style>
 </head>
 <body>
+  <!-- 🔹 Navigasyon barı -->
+  <div class="nav">
+    <a href="new-request.html">New Request</a>
+    <a href="ship-requests.html">My Requests</a>
+    <a href="change-password.html">Change Password</a>
+    <a href="index.html" onclick="logout()">Logout</a>
+  </div>
+
   <h2>My Submitted Requests</h2>
   <table id="requestTable">
     <thead>
@@ -82,7 +107,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Giriş yapan gemi adını localStorage'dan al
     const currentShip = localStorage.getItem("ship") || localStorage.getItem("username") || "";
 
     async function loadRequests() {
@@ -116,7 +140,6 @@
     function logout() {
       localStorage.removeItem("role");
       localStorage.removeItem("ship");
-      window.location.href = "index.html";
     }
 
     loadRequests();

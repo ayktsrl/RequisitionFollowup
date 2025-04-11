@@ -1,23 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Inspector Panel</title>
-<link href="style.css" rel="stylesheet"/>
-<script type="module">
-    // Sadece inspector girebilsin
-    if (localStorage.getItem("role") !== "inspector") {
-      window.location.href = "index.html";
+  <meta charset="UTF-8">
+  <title>Inspector Panel</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .nav {
+      background-color: #007bff;
+      padding: 12px 20px;
+      display: flex;
+      gap: 15px;
+      justify-content: flex-end;
+      border-bottom: 1px solid #ddd;
+    }
+    .nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .nav a:hover {
+      text-decoration: underline;
     }
 
+    body {
+      background-color: #f2f2f2;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 30px;
+    }
+
+    .table-container {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 1000px;
+      margin: 0 auto;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .logout-btn {
+      margin-top: 20px;
+      padding: 8px 16px;
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <!-- 🔹 Navigasyon -->
+  <div class="nav">
+    <a href="inspector.html">Inspector Panel</a>
+    <a href="company-panel.html">Company Panel</a>
+    <a href="change-password.html">Change Password</a>
+    <a href="index.html" onclick="logout()">Logout</a>
+  </div>
+
+  <div class="table-container">
+    <h2 style="text-align:center;">Inspector View</h2>
+    <table id="inspectorTable">
+      <thead>
+        <tr>
+          <th>Req. No</th>
+          <th>Date</th>
+          <th>Description</th>
+          <th>Department</th>
+          <th>Status</th>
+          <th>Remarks</th>
+          <th>Received</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- JS ile doldurulacak -->
+      </tbody>
+    </table>
+  </div>
+
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
     import { getDatabase, ref, get, child, update } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBXLFjHMQISuunaqZzpjR6Hq0EZERa_Y0",
       authDomain: "requisitionfollowup.firebaseapp.com",
-databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
+      databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
       projectId: "requisitionfollowup",
       storageBucket: "requisitionfollowup.appspot.com",
       messagingSenderId: "285248816511",
@@ -28,147 +113,45 @@ databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const tableBody = document.querySelector("#inspector-table tbody");
-    let allRequests = {};
+    const tableBody = document.querySelector("#inspectorTable tbody");
 
-    function renderInspectorTable(data) {
+    async function loadRequests() {
+      const snapshot = await get(child(ref(db), "requests"));
       tableBody.innerHTML = "";
-      Object.entries(data).forEach(([key, item]) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${item.reqNo}</td>
-          <td>${item.date}</td>
-          <td>${item.description}</td>
-          <td>${item.department}</td>
-          <td>${item.status}</td>
-          <td>${item.remarks || ""}</td>
-          <td><input type="checkbox" id="received-${key}" ${item.received ? "checked" : ""} onchange="markReceived('${key}')"/></td>
-        `;
-        tableBody.appendChild(row);
-      });
-    }
 
-    window.markReceived = async function (key) {
-      const received = document.getElementById(`received-${key}`).checked;
-      const requestRef = ref(db, `requests/${key}`);
-      await update(requestRef, { received });
-      fetchRequests(); // tabloyu yenile
-    }
-
-    async function fetchRequests() {
-      const dbRef = ref(db);
-      const snapshot = await get(child(dbRef, "requests"));
       if (snapshot.exists()) {
-        allRequests = snapshot.val();
-        renderInspectorTable(allRequests);
-      } else {
-        tableBody.innerHTML = '<tr><td colspan="7">No requests found.</td></tr>';
+        const data = snapshot.val();
+        Object.entries(data).forEach(([key, item]) => {
+          const row = document.createElement("tr");
+
+          row.innerHTML = `
+            <td>${item.reqNo}</td>
+            <td>${item.date}</td>
+            <td>${item.description}</td>
+            <td>${item.department}</td>
+            <td>${item.status}</td>
+            <td>${item.remarks || ""}</td>
+            <td>
+              <input type="checkbox" ${item.received ? "checked" : ""} onchange="markReceived('${key}', this.checked)" />
+            </td>
+          `;
+
+          tableBody.appendChild(row);
+        });
       }
     }
 
-    document.getElementById("filterInput").addEventListener("input", () => {
-      const search = document.getElementById("filterInput").value.toLowerCase();
-      const filtered = Object.fromEntries(
-        Object.entries(allRequests).filter(([_, req]) =>
-          req.reqNo.toLowerCase().includes(search) ||
-          req.department.toLowerCase().includes(search) ||
-          req.status.toLowerCase().includes(search)
-        )
-      );
-      renderInspectorTable(filtered);
-    });
-
-    window.logout = function () {
-      localStorage.removeItem("role");
-      window.location.href = "index.html";
+    window.markReceived = async function (key, checked) {
+      await update(ref(db, "requests/" + key), {
+        received: checked
+      });
     }
 
-    fetchRequests();
-</script>
-<style>
-  body {
-    background-color: #f2f2f2;
-    font-family: sans-serif;
-    margin: 0;
-    padding: 0;
-  }
-  .wrapper {
-    max-width: 1000px;
-    margin: 40px auto;
-    padding: 30px;
-  }
-  .table-container {
-    display: flex;
-    justify-content: center;
-    margin-top: 30px;
-    flex-direction: column;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-  }
-  th, td {
-    padding: 12px;
-    border: 1px solid #ccc;
-    text-align: left;
-    word-wrap: break-word;
-  }
-  select, input {
-    padding: 6px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-  }
-  button {
-    padding: 6px 10px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    background-color: #28a745;
-    color: white;
-  }
-  .logout-btn {
-    padding: 8px 12px;
-    background-color: #dc3545;
-    border: none;
-    border-radius: 6px;
-    color: white;
-    cursor: pointer;
-  }
-  #filterInput {
-    padding: 10px;
-    margin-bottom: 20px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    width: 100%;
-  }
-</style>
-</head>
-<body>
-<div class="wrapper">
-  <div style="display: flex; justify-content: space-between; align-items: center;">
-    <h1>Inspector Panel</h1>
-    <button class="logout-btn" onclick="logout()">Logout</button>
-  </div>
-</div>
-<div class="table-container">
-  <input id="filterInput" placeholder="Search by Req. No, Department, Status..." type="text"/>
-  <table id="inspector-table">
-    <thead>
-      <tr>
-        <th>Req. No</th>
-        <th>Date</th>
-        <th>Description</th>
-        <th>Department</th>
-        <th>Status</th>
-        <th>Remarks</th>
-        <th>Received</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- JavaScript ile doldurulacak -->
-    </tbody>
-  </table>
-</div>
+    window.logout = function () {
+      localStorage.clear();
+    }
+
+    loadRequests();
+  </script>
 </body>
 </html>

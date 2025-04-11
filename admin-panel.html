@@ -3,26 +3,46 @@
 <head>
   <meta charset="UTF-8">
   <title>User Management</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
   <style>
+    .nav {
+      background-color: #007bff;
+      padding: 12px 20px;
+      display: flex;
+      gap: 15px;
+      justify-content: flex-end;
+      border-bottom: 1px solid #ddd;
+    }
+    .nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .nav a:hover {
+      text-decoration: underline;
+    }
+
     body {
       background-color: #f2f2f2;
       font-family: sans-serif;
       margin: 0;
       padding: 30px;
     }
+
     .box {
       background: white;
       padding: 30px;
       border-radius: 12px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-      max-width: 500px;
+      max-width: 400px;
       margin: 0 auto 30px auto;
     }
+
     h2 {
       text-align: center;
       margin-bottom: 20px;
     }
+
     input, select, button {
       width: 100%;
       padding: 10px;
@@ -31,6 +51,7 @@
       border: 1px solid #ccc;
       font-size: 14px;
     }
+
     button {
       background-color: #007bff;
       color: white;
@@ -38,6 +59,7 @@
       border: none;
       cursor: pointer;
     }
+
     button:hover {
       background-color: #0056b3;
     }
@@ -68,6 +90,16 @@
   </style>
 </head>
 <body>
+
+  <!-- 🔹 Navigasyon -->
+  <div class="nav">
+    <a href="admin-dashboard.html">Admin Dashboard</a>
+    <a href="admin-panel.html">User Management</a>
+    <a href="company-panel.html">Company Panel</a>
+    <a href="inspector.html">Inspector Panel</a>
+    <a href="index.html" onclick="logout()">Logout</a>
+  </div>
+
   <div class="box">
     <h2>User Management</h2>
     <input type="text" id="username" placeholder="Username (or Email)" required />
@@ -90,7 +122,7 @@
         </tr>
       </thead>
       <tbody>
-        <!-- JavaScript ile doldurulacak -->
+        <!-- JS ile doldurulacak -->
       </tbody>
     </table>
   </div>
@@ -102,7 +134,7 @@
     const firebaseConfig = {
       apiKey: "AIzaSyBXLFjHMQISuunaqZzpjR6Hq0EZERa_Y0",
       authDomain: "requisitionfollowup.firebaseapp.com",
-databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
+      databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
       projectId: "requisitionfollowup",
       storageBucket: "requisitionfollowup.appspot.com",
       messagingSenderId: "285248816511",
@@ -113,30 +145,28 @@ databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-window.saveUser = async function () {
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value.trim();
-  const type = document.getElementById("userType").value;
+    window.saveUser = async function () {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const type = document.getElementById("userType").value;
 
-  if (!username || !password) {
-    alert("Please fill in all fields.");
-    return;
-  }
+      if (!username || !password) {
+        alert("Please fill in all fields.");
+        return;
+      }
 
-  // Firebase path-safe username oluştur
-  const safeUsername = username.replace(/[.#$[\]@]/g, "_");
+      const safeUsername = username.replace(/[.#$[\]@]/g, "_");
 
-  await set(ref(db, "users/" + safeUsername), {
-    password,
-    type
-  });
+      await set(ref(db, "users/" + safeUsername), {
+        password,
+        type
+      });
 
-  alert("User saved/updated successfully!");
-  document.getElementById("username").value = "";
-  document.getElementById("password").value = "";
-  fetchUsers();
-}
-
+      alert("User saved/updated successfully!");
+      document.getElementById("username").value = "";
+      document.getElementById("password").value = "";
+      fetchUsers();
+    }
 
     async function fetchUsers() {
       const dbRef = ref(db);
@@ -162,11 +192,10 @@ window.saveUser = async function () {
     }
 
     window.logout = function () {
-      localStorage.removeItem("role");
-      window.location.href = "index.html";
+      localStorage.clear();
     }
 
-    fetchUsers(); // Sayfa açıldığında kullanıcıları listele
+    fetchUsers();
   </script>
 </body>
 </html>
