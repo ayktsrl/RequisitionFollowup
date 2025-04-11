@@ -5,62 +5,55 @@
   <title>My Requests</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    .nav {
-      background-color: #007bff;
-      padding: 12px 20px;
-      display: flex;
-      gap: 15px;
-      justify-content: flex-end;
-      border-bottom: 1px solid #ddd;
-    }
-    .nav a {
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    .nav a:hover {
-      text-decoration: underline;
+    .table-container {
+      max-width: 95%;
+      margin: 40px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
-    body {
-      font-family: sans-serif;
-      background-color: #f2f2f2;
-      padding: 40px;
-    }
-    h2 {
-      text-align: center;
-    }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
-      background: white;
-      border-radius: 10px;
-      overflow: hidden;
     }
+
     th, td {
       padding: 10px;
-      border-bottom: 1px solid #ccc;
       text-align: left;
+      border-bottom: 1px solid #ccc;
     }
+
     th {
       background-color: #007bff;
       color: white;
     }
-    .logout-btn {
-      margin-top: 20px;
-      padding: 10px 20px;
-      border: none;
+
+    input, select {
+      width: 100%;
+      padding: 6px;
       border-radius: 6px;
-      background-color: #dc3545;
+      border: 1px solid #ccc;
+    }
+
+    button.update-btn {
+      background-color: #007bff;
       color: white;
-      font-weight: bold;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
       cursor: pointer;
+      font-weight: bold;
+    }
+
+    button.update-btn:hover {
+      background-color: #0056b3;
     }
   </style>
 </head>
 <body>
-  <!-- 🔹 Navigasyon barı -->
+  <!-- 🔹 Navigasyon -->
   <div class="nav">
     <a href="new-request.html">New Request</a>
     <a href="ship-requests.html">My Requests</a>
@@ -68,30 +61,27 @@
     <a href="index.html" onclick="logout()">Logout</a>
   </div>
 
-  <h2>My Submitted Requests</h2>
-  <table id="requestTable">
-    <thead>
-      <tr>
-        <th>Req. No</th>
-        <th>Date</th>
-        <th>Description</th>
-        <th>Department</th>
-        <th>Status</th>
-        <th>Remarks</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- JS ile doldurulacak -->
-    </tbody>
-  </table>
-
-  <div style="text-align: center;">
-    <button class="logout-btn" onclick="logout()">Logout</button>
+  <div class="table-container">
+    <h2 style="text-align: center;">My Submitted Requests</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Req. No</th>
+          <th>Date</th>
+          <th>Description</th>
+          <th>Department</th>
+          <th>Status</th>
+          <th>Remarks</th>
+          <th>Update</th>
+        </tr>
+      </thead>
+      <tbody id="requestTableBody"></tbody>
+    </table>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-    import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+    import { getDatabase, ref, get, child, update } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBXLFjHMQISuunaqZzpjR6Hq0EZERa_Y0",
@@ -106,40 +96,67 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const shipName = localStorage.getItem("ship");
 
-    const currentShip = localStorage.getItem("ship") || localStorage.getItem("username") || "";
+    const tbody = document.getElementById("requestTableBody");
 
     async function loadRequests() {
       const snapshot = await get(child(ref(db), "requests"));
-      const tbody = document.querySelector("#requestTable tbody");
       tbody.innerHTML = "";
 
       if (snapshot.exists()) {
         const data = snapshot.val();
-        Object.values(data).forEach(req => {
-          if (req.createdBy === currentShip) {
+        Object.entries(data).forEach(([key, req]) => {
+          if (req.createdBy === shipName) {
             const row = document.createElement("tr");
             row.innerHTML = `
               <td>${req.reqNo}</td>
-              <td>${req.date}</td>
-              <td>${req.description}</td>
-              <td>${req.department}</td>
-              <td>${req.status}</td>
-              <td>${req.remarks || ""}</td>
+              <td><input type="date" value="${req.date}" id="date-${key}" /></td>
+              <td><input type="text" value="${req.description}" id="desc-${key}" /></td>
+              <td>
+                <select id="dept-${key}">
+                  <option value="Engine" ${req.department === "Engine" ? "selected" : ""}>Engine</option>
+                  <option value="Deck" ${req.department === "Deck" ? "selected" : ""}>Deck</option>
+                  <option value="Galley" ${req.department === "Galley" ? "selected" : ""}>Galley</option>
+                </select>
+              </td>
+              <td>
+                <select id="status-${key}">
+                  <option value="In Progress" ${req.status === "In Progress" ? "selected" : ""}>In Progress</option>
+                  <option value="Approved" ${req.status === "Approved" ? "selected" : ""}>Approved</option>
+                  <option value="Rejected" ${req.status === "Rejected" ? "selected" : ""}>Rejected</option>
+                </select>
+              </td>
+              <td><input type="text" value="${req.remarks || ""}" id="remarks-${key}" /></td>
+              <td><button class="update-btn" onclick="updateRequest('${key}')">Update</button></td>
             `;
             tbody.appendChild(row);
           }
         });
-      } else {
-        const row = document.createElement("tr");
-        row.innerHTML = `<td colspan="6">No requests found.</td>`;
-        tbody.appendChild(row);
       }
     }
 
+    window.updateRequest = async function (key) {
+      const date = document.getElementById(`date-${key}`).value;
+      const description = document.getElementById(`desc-${key}`).value;
+      const department = document.getElementById(`dept-${key}`).value;
+      const status = document.getElementById(`status-${key}`).value;
+      const remarks = document.getElementById(`remarks-${key}`).value;
+
+      await update(ref(db, "requests/" + key), {
+        date,
+        description,
+        department,
+        status,
+        remarks
+      });
+
+      alert("Request updated!");
+      loadRequests();
+    }
+
     function logout() {
-      localStorage.removeItem("role");
-      localStorage.removeItem("ship");
+      localStorage.clear();
     }
 
     loadRequests();

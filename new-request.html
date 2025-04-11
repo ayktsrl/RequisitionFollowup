@@ -6,46 +6,26 @@
   <title>New Request</title>
   <link href="style.css" rel="stylesheet"/>
   <style>
-    .nav {
-      background-color: #007bff;
-      padding: 12px 20px;
-      display: flex;
-      gap: 15px;
-      justify-content: flex-end;
-      border-bottom: 1px solid #ddd;
-    }
-    .nav a {
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    .nav a:hover {
-      text-decoration: underline;
-    }
-
-    body {
-      font-family: sans-serif;
-      background-color: #f2f2f2;
-      margin: 0;
-      padding: 20px;
-    }
     .form-container {
       max-width: 600px;
-      margin: 0 auto;
+      margin: 40px auto;
       background: white;
       padding: 30px;
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
+
     h1 {
       text-align: center;
       margin-bottom: 20px;
     }
+
     label {
       display: block;
       margin-top: 10px;
       font-weight: bold;
     }
+
     input, select {
       width: 100%;
       padding: 10px;
@@ -53,6 +33,7 @@
       border-radius: 6px;
       border: 1px solid #ccc;
     }
+
     button {
       margin-top: 20px;
       width: 100%;
@@ -64,11 +45,37 @@
       border-radius: 6px;
       cursor: pointer;
     }
+
+    .list-container {
+      max-width: 90%;
+      margin: 40px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ccc;
+    }
+
+    th {
+      background-color: #007bff;
+      color: white;
+    }
   </style>
 </head>
 <body>
 
-  <!-- 🔹 Navigasyon barı -->
+  <!-- 🔹 Navigasyon -->
   <div class="nav">
     <a href="new-request.html">New Request</a>
     <a href="ship-requests.html">My Requests</a>
@@ -95,13 +102,32 @@
     </form>
   </div>
 
+  <div class="list-container">
+    <h2 style="text-align:center;">Previous Requests</h2>
+    <table id="requestTable">
+      <thead>
+        <tr>
+          <th>Req. No</th>
+          <th>Date</th>
+          <th>Description</th>
+          <th>Department</th>
+          <th>Status</th>
+          <th>Remarks</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Talepler burada listelenecek -->
+      </tbody>
+    </table>
+  </div>
+
   <script type="module">
     if (localStorage.getItem("role") !== "ship") {
       window.location.href = "index.html";
     }
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+    import { getDatabase, ref, push, get, child } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBXLFjHMQISuunaqZzpjR6Hq0EZERa_Y0",
@@ -116,6 +142,7 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const currentShip = localStorage.getItem("ship") || "unknown-ship";
 
     document.getElementById("requestForm").addEventListener("submit", async function (e) {
       e.preventDefault();
@@ -124,7 +151,6 @@
       const date = document.getElementById("date").value;
       const description = document.getElementById("description").value;
       const department = document.getElementById("department").value;
-      const createdBy = localStorage.getItem("ship") || "unknown-ship";
 
       const newRequest = {
         reqNo,
@@ -133,18 +159,48 @@
         department,
         status: "In Progress",
         remarks: "",
-        createdBy
+        createdBy: currentShip
       };
 
       await push(ref(db, "requests"), newRequest);
-
       alert("Request submitted successfully!");
       document.getElementById("requestForm").reset();
+      loadRequests();
     });
 
-    window.logout = function () {
+    async function loadRequests() {
+      const snapshot = await get(child(ref(db), "requests"));
+      const tbody = document.querySelector("#requestTable tbody");
+      tbody.innerHTML = "";
+
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        Object.values(data).forEach(req => {
+          if (req.createdBy === currentShip) {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${req.reqNo}</td>
+              <td>${req.date}</td>
+              <td>${req.description}</td>
+              <td>${req.department}</td>
+              <td>${req.status}</td>
+              <td>${req.remarks || ""}</td>
+            `;
+            tbody.appendChild(row);
+          }
+        });
+      } else {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td colspan="6">No previous requests.</td>`;
+        tbody.appendChild(row);
+      }
+    }
+
+    function logout() {
       localStorage.clear();
     }
+
+    loadRequests();
   </script>
 </body>
 </html>
