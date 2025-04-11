@@ -1,34 +1,103 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Requisition Login</title>
-<link href="style.css" rel="stylesheet"/>
+  <meta charset="UTF-8">
+  <title>User Management</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background-color: #f2f2f2;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 30px;
+    }
+    .box {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      margin: 0 auto 30px auto;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .table-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #f8f8f8;
+    }
+  </style>
 </head>
 <body>
-<div class="container">
-<h1>Login</h1>
-<div class="role-switch">
-<button class="login-type-btn active" id="btn-ship" onclick="selectRole('ship')">Ship</button>
-<button class="login-type-btn" id="btn-inspector" onclick="selectRole('inspector')">Inspector</button>
-</div>
-<form id="login-form">
-<div id="ship-fields">
-<input id="shipName" placeholder="Ship Name" type="text"/>
-<input id="shipPass" placeholder="Password" type="password"/>
-</div>
-<div id="user-fields" style="display: none;">
-<input id="inspectorEmail" placeholder="Email" type="email"/>
-<input id="inspectorPass" placeholder="Password" type="password"/>
-</div>
-<button type="submit">Login</button>
-</form>
-</div>
-<script type="module">
+  <div class="box">
+    <h2>User Management</h2>
+    <input type="text" id="username" placeholder="Username (or Email)" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <select id="userType">
+      <option value="ship">Ship</option>
+      <option value="inspector">Inspector</option>
+    </select>
+    <button onclick="saveUser()">Save User</button>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <div class="table-container">
+    <h3 style="text-align: center;">Existing Users</h3>
+    <table id="userTable">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- JavaScript ile doldurulacak -->
+      </tbody>
+    </table>
+  </div>
+
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-    import { getDatabase, ref, child, get } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBXLFjHMQISuunaqZzpjR6Hq0EZERa_Y0",
@@ -43,70 +112,56 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    let selectedRole = "ship";
+    window.saveUser = async function () {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const type = document.getElementById("userType").value;
 
-    window.selectRole = function(role) {
-      selectedRole = role;
-      const shipBtn = document.getElementById("btn-ship");
-      const inspectorBtn = document.getElementById("btn-inspector");
+      if (!username || !password) {
+        alert("Please fill in all fields.");
+        return;
+      }
 
-      shipBtn.classList.remove("active");
-      inspectorBtn.classList.remove("active");
+      await set(ref(db, "users/" + username), {
+        password,
+        type
+      });
 
-      if (role === "ship") {
-        shipBtn.classList.add("active");
-        document.getElementById("ship-fields").style.display = "block";
-        document.getElementById("user-fields").style.display = "none";
+      alert("User saved/updated successfully!");
+      document.getElementById("username").value = "";
+      document.getElementById("password").value = "";
+      fetchUsers();
+    }
+
+    async function fetchUsers() {
+      const dbRef = ref(db);
+      const snapshot = await get(child(dbRef, "users"));
+      const tbody = document.querySelector("#userTable tbody");
+      tbody.innerHTML = "";
+
+      if (snapshot.exists()) {
+        const users = snapshot.val();
+        Object.entries(users).forEach(([username, data]) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${username}</td>
+            <td>${data.type}</td>
+          `;
+          tbody.appendChild(row);
+        });
       } else {
-        inspectorBtn.classList.add("active");
-        document.getElementById("ship-fields").style.display = "none";
-        document.getElementById("user-fields").style.display = "block";
+        const row = document.createElement("tr");
+        row.innerHTML = `<td colspan="2">No users found.</td>`;
+        tbody.appendChild(row);
       }
     }
 
-    const form = document.getElementById("login-form");
-    form.addEventListener("submit", async function (e) {
-      e.preventDefault();
-      localStorage.setItem("role", selectedRole);
+    window.logout = function () {
+      localStorage.removeItem("role");
+      window.location.href = "index.html";
+    }
 
-      const dbRef = ref(db);
-
-      if (selectedRole === "ship") {
-        const shipName = document.getElementById("shipName").value;
-        const shipPass = document.getElementById("shipPass").value;
-        const snapshot = await get(child(dbRef, `users/${shipName}`));
-        if (snapshot.exists()) {
-          const user = snapshot.val();
-          if (user.type === "ship" && user.password === shipPass) {
-            window.location.href = "new-request.html";
-          } else {
-            alert("Invalid ship credentials.");
-          }
-        } else {
-          alert("Ship not found.");
-        }
-      } else if (selectedRole === "inspector") {
-        const email = document.getElementById("inspectorEmail").value;
-        const pass = document.getElementById("inspectorPass").value;
-
-        if (email === "aykutsaral@gmail.com" && pass === "135246") {
-          window.location.href = "admin-panel.html";
-          return;
-        }
-
-        const snapshot = await get(child(dbRef, `users/${email}`));
-        if (snapshot.exists()) {
-          const user = snapshot.val();
-          if (user.type === "inspector" && user.password === pass) {
-            window.location.href = "inspector.html";
-          } else {
-            alert("Invalid inspector credentials.");
-          }
-        } else {
-          alert("Inspector not found.");
-        }
-      }
-    });
+    fetchUsers(); // Sayfa açıldığında kullanıcıları listele
   </script>
 </body>
 </html>
