@@ -5,85 +5,58 @@
   <title>Company Panel</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    .nav {
-      background-color: #007bff;
-      padding: 12px 20px;
-      display: flex;
-      gap: 15px;
-      justify-content: flex-end;
-      border-bottom: 1px solid #ddd;
-    }
-    .nav a {
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    .nav a:hover {
-      text-decoration: underline;
-    }
-
-    body {
-      background-color: #f2f2f2;
-      font-family: sans-serif;
-      margin: 0;
-      padding: 30px;
-    }
-
     .table-container {
+      max-width: 95%;
+      margin: 40px auto;
       background: white;
       padding: 20px;
-      border-radius: 10px;
-      max-width: 1000px;
-      margin: 0 auto;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
     }
-
     th, td {
-      padding: 12px;
+      padding: 10px;
       text-align: left;
-      border-bottom: 1px solid #ddd;
+      border-bottom: 1px solid #ccc;
     }
-
     th {
       background-color: #007bff;
       color: white;
     }
-
-    select, button {
-      padding: 6px 10px;
+    input, select {
+      width: 100%;
+      padding: 6px;
       border-radius: 6px;
       border: 1px solid #ccc;
-      font-size: 14px;
     }
-
-    .logout-btn {
-      margin-top: 20px;
-      padding: 8px 16px;
-      background-color: #dc3545;
-      color: white;
-      border: none;
+    .btn {
+      padding: 6px 12px;
+      margin: 2px;
       border-radius: 6px;
+      border: none;
+      color: white;
       font-weight: bold;
       cursor: pointer;
     }
+    .update-btn { background-color: #28a745; }
+    .edit-btn { background-color: #007bff; }
+    .remove-btn { background-color: #dc3545; }
   </style>
 </head>
 <body>
-  <!-- 🔹 Navigasyon -->
   <div class="nav">
     <a href="company-panel.html">Company Panel</a>
+    <a href="inspector.html">Inspector Panel</a>
     <a href="change-password.html">Change Password</a>
     <a href="index.html" onclick="logout()">Logout</a>
   </div>
 
   <div class="table-container">
-    <h2 style="text-align:center;">Company Requests</h2>
-    <table id="companyTable">
+    <h2 style="text-align: center;">Company Requests</h2>
+    <table>
       <thead>
         <tr>
           <th>Req. No</th>
@@ -92,18 +65,19 @@
           <th>Department</th>
           <th>Status</th>
           <th>Remarks</th>
-          <th>Action</th>
+          <th>Office Ref. No</th>
+          <th>Office Comments</th>
+          <th>Received</th>
+          <th>Actions</th>
         </tr>
       </thead>
-      <tbody>
-        <!-- JS ile doldurulacak -->
-      </tbody>
+      <tbody id="requestTableBody"></tbody>
     </table>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-    import { getDatabase, ref, get, child, update } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+    import { getDatabase, ref, get, child, update, remove } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBXLFjHMQISuunaqZzpjR6Hq0EZERa_Y0",
@@ -118,55 +92,81 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-
-    const tableBody = document.querySelector("#companyTable tbody");
+    const tbody = document.getElementById("requestTableBody");
 
     async function loadRequests() {
       const snapshot = await get(child(ref(db), "requests"));
-      tableBody.innerHTML = "";
+      tbody.innerHTML = "";
 
       if (snapshot.exists()) {
         const data = snapshot.val();
-        Object.entries(data).forEach(([key, item]) => {
+        Object.entries(data).forEach(([key, req]) => {
           const row = document.createElement("tr");
-
           row.innerHTML = `
-            <td>${item.reqNo}</td>
-            <td>${item.date}</td>
-            <td>${item.description}</td>
-            <td>${item.department}</td>
-            <td>${item.status}</td>
-            <td><input type="text" value="${item.remarks || ""}" id="remarks-${key}" /></td>
+            <td><input type="text" id="reqno-${key}" value="${req.reqNo}" disabled></td>
+            <td><input type="date" id="date-${key}" value="${req.date}" disabled></td>
+            <td><input type="text" id="desc-${key}" value="${req.description}" disabled></td>
+            <td><input type="text" id="dept-${key}" value="${req.department}" disabled></td>
+            <td><input type="text" id="status-${key}" value="${req.status}" disabled></td>
+            <td><input type="text" id="remarks-${key}" value="${req.remarks || ''}" disabled></td>
+            <td><input type="text" id="officeRef-${key}" value="${req.officeRef || ''}" disabled></td>
+            <td><input type="text" id="officeComments-${key}" value="${req.officeComments || ''}" disabled></td>
+            <td><input type="text" id="received-${key}" value="${req.received || ''}" disabled></td>
             <td>
-              <select id="status-${key}">
-                <option value="In Progress" ${item.status === "In Progress" ? "selected" : ""}>In Progress</option>
-                <option value="Approved" ${item.status === "Approved" ? "selected" : ""}>Approved</option>
-                <option value="Rejected" ${item.status === "Rejected" ? "selected" : ""}>Rejected</option>
-              </select>
-              <button onclick="updateStatus('${key}')">Save</button>
+              <button class="btn edit-btn" onclick="enableEdit('${key}')">Edit</button>
+              <button class="btn update-btn" onclick="updateRequest('${key}')" style="display:none;">Update</button>
+              <button class="btn remove-btn" onclick="deleteRequest('${key}')">Remove</button>
             </td>
           `;
-
-          tableBody.appendChild(row);
+          tbody.appendChild(row);
         });
       }
     }
 
-    window.updateStatus = async function (key) {
+    window.enableEdit = function (key) {
+      ['reqno', 'date', 'desc', 'dept', 'status', 'remarks', 'officeRef', 'officeComments', 'received'].forEach(id => {
+        document.getElementById(`${id}-${key}`).disabled = false;
+      });
+      document.querySelector(`.edit-btn[onclick="enableEdit('${key}')"]`).style.display = 'none';
+      document.querySelector(`.update-btn[onclick="updateRequest('${key}')"]`).style.display = 'inline-block';
+    }
+
+    window.updateRequest = async function (key) {
+      const reqNo = document.getElementById(`reqno-${key}`).value;
+      const date = document.getElementById(`date-${key}`).value;
+      const description = document.getElementById(`desc-${key}`).value;
+      const department = document.getElementById(`dept-${key}`).value;
       const status = document.getElementById(`status-${key}`).value;
       const remarks = document.getElementById(`remarks-${key}`).value;
+      const officeRef = document.getElementById(`officeRef-${key}`).value;
+      const officeComments = document.getElementById(`officeComments-${key}`).value;
+      const received = document.getElementById(`received-${key}`).value;
 
-      const updateData = {
+      await update(ref(db, "requests/" + key), {
+        reqNo,
+        date,
+        description,
+        department,
         status,
-        remarks
-      };
+        remarks,
+        officeRef,
+        officeComments,
+        received
+      });
 
-      await update(ref(db, "requests/" + key), updateData);
-      alert("Request updated.");
+      alert("Request updated!");
       loadRequests();
     }
 
-    window.logout = function () {
+    window.deleteRequest = async function (key) {
+      const confirmed = confirm("Are you sure you want to delete this request?");
+      if (confirmed) {
+        await remove(ref(db, "requests/" + key));
+        loadRequests();
+      }
+    }
+
+    function logout() {
       localStorage.clear();
     }
 
