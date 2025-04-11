@@ -65,7 +65,10 @@
           <th>Department</th>
           <th>Status</th>
           <th>Remarks</th>
+          <th>Received On</th>
           <th>Received</th>
+          <th>Office Ref. No</th>
+          <th>Office Comments</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -101,13 +104,16 @@
         Object.entries(data).forEach(([key, req]) => {
           const row = document.createElement("tr");
           row.innerHTML = `
-            <td>${req.reqNo}</td>
+            <td><input type="text" id="reqno-${key}" value="${req.reqNo}" disabled></td>
             <td><input type="date" id="date-${key}" value="${req.date}" disabled></td>
             <td><input type="text" id="desc-${key}" value="${req.description}" disabled></td>
             <td><input type="text" id="dept-${key}" value="${req.department}" disabled></td>
             <td><input type="text" id="status-${key}" value="${req.status}" disabled></td>
             <td><input type="text" id="remarks-${key}" value="${req.remarks || ''}" disabled></td>
+            <td><input type="text" id="receivedOn-${key}" value="${req.receivedOn || ''}" disabled></td>
             <td><input type="text" id="received-${key}" value="${req.received || ''}" disabled></td>
+            <td><input type="text" id="officeRef-${key}" value="${req.officeRef || ''}" disabled></td>
+            <td><input type="text" id="officeComments-${key}" value="${req.officeComments || ''}" disabled></td>
             <td>
               <button class="btn edit-btn" onclick="enableEdit('${key}')">Edit</button>
               <button class="btn update-btn" onclick="updateRequest('${key}')" style="display:none;">Update</button>
@@ -120,7 +126,7 @@
     }
 
     window.enableEdit = function (key) {
-      ['date', 'desc', 'dept', 'status', 'remarks', 'received'].forEach(id => {
+      ['reqno', 'date', 'desc', 'dept', 'status', 'remarks', 'receivedOn', 'received', 'officeRef', 'officeComments'].forEach(id => {
         document.getElementById(`${id}-${key}`).disabled = false;
       });
       document.querySelector(`.edit-btn[onclick="enableEdit('${key}')"]`).style.display = 'none';
@@ -128,20 +134,28 @@
     }
 
     window.updateRequest = async function (key) {
+      const reqNo = document.getElementById(`reqno-${key}`).value;
       const date = document.getElementById(`date-${key}`).value;
       const description = document.getElementById(`desc-${key}`).value;
       const department = document.getElementById(`dept-${key}`).value;
       const status = document.getElementById(`status-${key}`).value;
       const remarks = document.getElementById(`remarks-${key}`).value;
+      const receivedOn = document.getElementById(`receivedOn-${key}`).value;
       const received = document.getElementById(`received-${key}`).value;
+      const officeRef = document.getElementById(`officeRef-${key}`).value;
+      const officeComments = document.getElementById(`officeComments-${key}`).value;
 
       await update(ref(db, "requests/" + key), {
+        reqNo,
         date,
         description,
         department,
         status,
         remarks,
-        received
+        receivedOn,
+        received,
+        officeRef,
+        officeComments
       });
 
       alert("Request updated!");
