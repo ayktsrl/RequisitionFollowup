@@ -1,116 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Requisition Login</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="container">
-    <h1>Login</h1>
-    
-    <div class="role-switch">
-      <button onclick="selectRole('ship')" id="btn-ship" class="login-type-btn active">Ship</button>
-      <button onclick="selectRole('inspector')" id="btn-inspector" class="login-type-btn">Inspector</button>
-    </div>
+body {
+  font-family: sans-serif;
+  background-color: #f2f2f2;
+  margin: 0;
+  padding: 0;
+}
 
-    <form id="login-form">
-      <div id="ship-fields">
-        <input type="text" id="shipName" placeholder="Ship Name" required />
-        <input type="password" id="shipPass" placeholder="Password" required />
-      </div>
+.container {
+  max-width: 400px;
+  margin: 100px auto;
+  padding: 30px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
 
-      <div id="user-fields" style="display: none;">
-        <input type="email" id="inspectorEmail" placeholder="Email" required />
-        <input type="password" id="inspectorPass" placeholder="Password" required />
-      </div>
+input, button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
 
-      <button type="submit">Login</button>
-    </form>
-  </div>
+button {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+}
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-    import { getDatabase, ref, child, get } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+button:hover {
+  background-color: #0056b3;
+}
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBXLFjHMQISuunaqZzpjR6Hq0EZERa_Y0",
-      authDomain: "requisitionfollowup.firebaseapp.com",
-      projectId: "requisitionfollowup",
-      storageBucket: "requisitionfollowup.appspot.com",
-      messagingSenderId: "285248816511",
-      appId: "1:285248816511:web:543c18fe600f2fde88464a",
-      measurementId: "G-T5FGT3RCDL"
-    };
+.login-type-btn {
+  width: 48%;
+  margin: 5px 1%;
+}
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    let selectedRole = "ship";
-
-    window.selectRole = function(role) {
-      selectedRole = role;
-      const shipBtn = document.getElementById("btn-ship");
-      const inspectorBtn = document.getElementById("btn-inspector");
-
-      shipBtn.classList.remove("active");
-      inspectorBtn.classList.remove("active");
-
-      if (role === "ship") {
-        shipBtn.classList.add("active");
-        document.getElementById("ship-fields").style.display = "block";
-        document.getElementById("user-fields").style.display = "none";
-      } else {
-        inspectorBtn.classList.add("active");
-        document.getElementById("ship-fields").style.display = "none";
-        document.getElementById("user-fields").style.display = "block";
-      }
-    }
-
-    const form = document.getElementById("login-form");
-    form.addEventListener("submit", async function (e) {
-      e.preventDefault();
-      localStorage.setItem("role", selectedRole);
-
-      const dbRef = ref(db);
-
-      if (selectedRole === "ship") {
-        const shipName = document.getElementById("shipName").value;
-        const shipPass = document.getElementById("shipPass").value;
-        const snapshot = await get(child(dbRef, `users/${shipName}`));
-        if (snapshot.exists()) {
-          const user = snapshot.val();
-          if (user.type === "ship" && user.password === shipPass) {
-            window.location.href = "new-request.html";
-          } else {
-            alert("Invalid ship credentials.");
-          }
-        } else {
-          alert("Ship not found.");
-        }
-      } else if (selectedRole === "inspector") {
-        const email = document.getElementById("inspectorEmail").value;
-        const pass = document.getElementById("inspectorPass").value;
-
-        if (email === "aykutsaral@gmail.com" && pass === "135246") {
-          window.location.href = "admin-panel.html";
-          return;
-        }
-
-        const snapshot = await get(child(dbRef, `users/${email}`));
-        if (snapshot.exists()) {
-          const user = snapshot.val();
-          if (user.type === "inspector" && user.password === pass) {
-            window.location.href = "inspector.html";
-          } else {
-            alert("Invalid inspector credentials.");
-          }
-        } else {
-          alert("Inspector not found.");
-        }
-      }
-    });
-  </script>
-</body>
-</html>
+.login-type-btn.active {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  border: 2px solid #0056b3;
+}
