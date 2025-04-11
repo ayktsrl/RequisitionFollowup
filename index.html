@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <title>Requisition Login</title>
-  <link href="style.css" rel="stylesheet" />
+  <link href="style.css" rel="stylesheet"/>
 </head>
 <body>
   <div class="container">
@@ -15,12 +15,12 @@
     </div>
     <form id="login-form">
       <div id="ship-fields">
-        <input id="shipName" placeholder="Ship Name" type="text" />
-        <input id="shipPass" placeholder="Password" type="password" />
+        <input id="shipName" placeholder="Ship Name" type="text"/>
+        <input id="shipPass" placeholder="Password" type="password"/>
       </div>
       <div id="user-fields" style="display: none;">
-        <input id="inspectorEmail" placeholder="Email" type="email" />
-        <input id="inspectorPass" placeholder="Password" type="password" />
+        <input id="inspectorEmail" placeholder="Email" type="email"/>
+        <input id="inspectorPass" placeholder="Password" type="password"/>
       </div>
       <button type="submit">Login</button>
     </form>
@@ -46,7 +46,7 @@
 
     let selectedRole = "ship";
 
-    window.selectRole = function (role) {
+    window.selectRole = function(role) {
       selectedRole = role;
       const shipBtn = document.getElementById("btn-ship");
       const inspectorBtn = document.getElementById("btn-inspector");
@@ -63,7 +63,7 @@
         document.getElementById("ship-fields").style.display = "none";
         document.getElementById("user-fields").style.display = "block";
       }
-    };
+    }
 
     const form = document.getElementById("login-form");
     form.addEventListener("submit", async function (e) {
@@ -81,6 +81,7 @@
         if (snapshot.exists()) {
           const user = snapshot.val();
           if (user.type === "ship" && user.password === shipPass) {
+            localStorage.setItem("ship", shipName); // ✅ Ship adı kayıt ediliyor!
             window.location.href = "new-request.html";
           } else {
             alert("Invalid ship credentials.");
@@ -91,7 +92,6 @@
       } else if (selectedRole === "inspector") {
         const email = document.getElementById("inspectorEmail").value;
         const pass = document.getElementById("inspectorPass").value;
-
         const safeEmail = email.replace(/[.#$[\]@]/g, "_");
 
         if (email === "aykutsaral@gmail.com" && pass === "135246") {
