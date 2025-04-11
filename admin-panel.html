@@ -113,26 +113,30 @@ databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    window.saveUser = async function () {
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value.trim();
-      const type = document.getElementById("userType").value;
+window.saveUser = async function () {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const type = document.getElementById("userType").value;
 
-      if (!username || !password) {
-        alert("Please fill in all fields.");
-        return;
-      }
+  if (!username || !password) {
+    alert("Please fill in all fields.");
+    return;
+  }
 
-      await set(ref(db, "users/" + username), {
-        password,
-        type
-      });
+  // Firebase path-safe username oluştur
+  const safeUsername = username.replace(/[.#$[\]@]/g, "_");
 
-      alert("User saved/updated successfully!");
-      document.getElementById("username").value = "";
-      document.getElementById("password").value = "";
-      fetchUsers();
-    }
+  await set(ref(db, "users/" + safeUsername), {
+    password,
+    type
+  });
+
+  alert("User saved/updated successfully!");
+  document.getElementById("username").value = "";
+  document.getElementById("password").value = "";
+  fetchUsers();
+}
+
 
     async function fetchUsers() {
       const dbRef = ref(db);

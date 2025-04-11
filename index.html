@@ -1,39 +1,39 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Requisition Login</title>
-<link href="style.css" rel="stylesheet"/>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Requisition Login</title>
+  <link href="style.css" rel="stylesheet" />
 </head>
 <body>
-<div class="container">
-<h1>Login</h1>
-<div class="role-switch">
-<button class="login-type-btn active" id="btn-ship" onclick="selectRole('ship')">Ship</button>
-<button class="login-type-btn" id="btn-inspector" onclick="selectRole('inspector')">Inspector</button>
-</div>
-<form id="login-form">
-<div id="ship-fields">
-<input id="shipName" placeholder="Ship Name" type="text"/>
-<input id="shipPass" placeholder="Password" type="password"/>
-</div>
-<div id="user-fields" style="display: none;">
-<input id="inspectorEmail" placeholder="Email" type="email"/>
-<input id="inspectorPass" placeholder="Password" type="password"/>
-</div>
-<button type="submit">Login</button>
-</form>
-</div>
-<script type="module">
+  <div class="container">
+    <h1>Login</h1>
+    <div class="role-switch">
+      <button class="login-type-btn active" id="btn-ship" onclick="selectRole('ship')">Ship</button>
+      <button class="login-type-btn" id="btn-inspector" onclick="selectRole('inspector')">Inspector</button>
+    </div>
+    <form id="login-form">
+      <div id="ship-fields">
+        <input id="shipName" placeholder="Ship Name" type="text" />
+        <input id="shipPass" placeholder="Password" type="password" />
+      </div>
+      <div id="user-fields" style="display: none;">
+        <input id="inspectorEmail" placeholder="Email" type="email" />
+        <input id="inspectorPass" placeholder="Password" type="password" />
+      </div>
+      <button type="submit">Login</button>
+    </form>
+  </div>
+
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
     import { getDatabase, ref, child, get } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBXLFjHMQISuunaqZzpjR6Hq0EZERa_Y0",
       authDomain: "requisitionfollowup.firebaseapp.com",
-databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
+      databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
       projectId: "requisitionfollowup",
       storageBucket: "requisitionfollowup.appspot.com",
       messagingSenderId: "285248816511",
@@ -46,7 +46,7 @@ databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
 
     let selectedRole = "ship";
 
-    window.selectRole = function(role) {
+    window.selectRole = function (role) {
       selectedRole = role;
       const shipBtn = document.getElementById("btn-ship");
       const inspectorBtn = document.getElementById("btn-inspector");
@@ -63,7 +63,7 @@ databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
         document.getElementById("ship-fields").style.display = "none";
         document.getElementById("user-fields").style.display = "block";
       }
-    }
+    };
 
     const form = document.getElementById("login-form");
     form.addEventListener("submit", async function (e) {
@@ -75,7 +75,9 @@ databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
       if (selectedRole === "ship") {
         const shipName = document.getElementById("shipName").value;
         const shipPass = document.getElementById("shipPass").value;
-        const snapshot = await get(child(dbRef, `users/${shipName}`));
+        const safeShipName = shipName.replace(/[.#$[\]@]/g, "_");
+
+        const snapshot = await get(child(dbRef, `users/${safeShipName}`));
         if (snapshot.exists()) {
           const user = snapshot.val();
           if (user.type === "ship" && user.password === shipPass) {
@@ -90,12 +92,14 @@ databaseURL: "https://requisitionfollowup-default-rtdb.firebaseio.com",
         const email = document.getElementById("inspectorEmail").value;
         const pass = document.getElementById("inspectorPass").value;
 
-if (email === "aykutsaral@gmail.com" && pass === "135246") {
-  window.location.href = "admin-dashboard.html";
-  return;
-}
+        const safeEmail = email.replace(/[.#$[\]@]/g, "_");
 
-        const snapshot = await get(child(dbRef, `users/${email}`));
+        if (email === "aykutsaral@gmail.com" && pass === "135246") {
+          window.location.href = "admin-dashboard.html";
+          return;
+        }
+
+        const snapshot = await get(child(dbRef, `users/${safeEmail}`));
         if (snapshot.exists()) {
           const user = snapshot.val();
           if (user.type === "inspector" && user.password === pass) {
