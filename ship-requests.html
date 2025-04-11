@@ -13,47 +13,46 @@
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
     }
-
     th, td {
       padding: 10px;
       text-align: left;
       border-bottom: 1px solid #ccc;
     }
-
     th {
       background-color: #007bff;
       color: white;
     }
-
     input, select {
       width: 100%;
       padding: 6px;
       border-radius: 6px;
       border: 1px solid #ccc;
     }
-
-    button.update-btn {
-      background-color: #007bff;
-      color: white;
-      border: none;
+    .btn {
       padding: 6px 12px;
+      margin: 2px;
       border-radius: 6px;
-      cursor: pointer;
+      border: none;
+      color: white;
       font-weight: bold;
+      cursor: pointer;
     }
-
-    button.update-btn:hover {
-      background-color: #0056b3;
+    .update-btn {
+      background-color: #28a745;
+    }
+    .edit-btn {
+      background-color: #007bff;
+    }
+    .remove-btn {
+      background-color: #dc3545;
     }
   </style>
 </head>
 <body>
-  <!-- 🔹 Navigasyon -->
   <div class="nav">
     <a href="new-request.html">New Request</a>
     <a href="ship-requests.html">My Requests</a>
@@ -72,7 +71,7 @@
           <th>Department</th>
           <th>Status</th>
           <th>Remarks</th>
-          <th>Update</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody id="requestTableBody"></tbody>
@@ -81,7 +80,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-    import { getDatabase, ref, get, child, update } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+    import { getDatabase, ref, get, child, update, remove } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBXLFjHMQISuunaqZzpjR6Hq0EZERa_Y0",
@@ -97,7 +96,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const shipName = localStorage.getItem("ship");
-
     const tbody = document.getElementById("requestTableBody");
 
     async function loadRequests() {
@@ -109,31 +107,44 @@
         Object.entries(data).forEach(([key, req]) => {
           if (req.createdBy === shipName) {
             const row = document.createElement("tr");
+
             row.innerHTML = `
               <td>${req.reqNo}</td>
-              <td><input type="date" value="${req.date}" id="date-${key}" /></td>
-              <td><input type="text" value="${req.description}" id="desc-${key}" /></td>
+              <td><input type="date" id="date-${key}" value="${req.date}" disabled></td>
+              <td><input type="text" id="desc-${key}" value="${req.description}" disabled></td>
               <td>
-                <select id="dept-${key}">
+                <select id="dept-${key}" disabled>
                   <option value="Engine" ${req.department === "Engine" ? "selected" : ""}>Engine</option>
                   <option value="Deck" ${req.department === "Deck" ? "selected" : ""}>Deck</option>
                   <option value="Galley" ${req.department === "Galley" ? "selected" : ""}>Galley</option>
                 </select>
               </td>
               <td>
-                <select id="status-${key}">
+                <select id="status-${key}" disabled>
                   <option value="In Progress" ${req.status === "In Progress" ? "selected" : ""}>In Progress</option>
                   <option value="Approved" ${req.status === "Approved" ? "selected" : ""}>Approved</option>
                   <option value="Rejected" ${req.status === "Rejected" ? "selected" : ""}>Rejected</option>
                 </select>
               </td>
-              <td><input type="text" value="${req.remarks || ""}" id="remarks-${key}" /></td>
-              <td><button class="update-btn" onclick="updateRequest('${key}')">Update</button></td>
+              <td><input type="text" id="remarks-${key}" value="${req.remarks || ''}" disabled></td>
+              <td>
+                <button class="btn edit-btn" onclick="enableEdit('${key}')">Edit</button>
+                <button class="btn update-btn" onclick="updateRequest('${key}')" style="display:none;">Update</button>
+                <button class="btn remove-btn" onclick="deleteRequest('${key}')">Remove</button>
+              </td>
             `;
             tbody.appendChild(row);
           }
         });
       }
+    }
+
+    window.enableEdit = function (key) {
+      ['date', 'desc', 'dept', 'status', 'remarks'].forEach(id => {
+        document.getElementById(`${id}-${key}`).disabled = false;
+      });
+      document.querySelector(`.edit-btn[onclick="enableEdit('${key}')"]`).style.display = 'none';
+      document.querySelector(`.update-btn[onclick="updateRequest('${key}')"]`).style.display = 'inline-block';
     }
 
     window.updateRequest = async function (key) {
@@ -153,6 +164,14 @@
 
       alert("Request updated!");
       loadRequests();
+    }
+
+    window.deleteRequest = async function (key) {
+      const confirmed = confirm("Are you sure you want to delete this request?");
+      if (confirmed) {
+        await remove(ref(db, "requests/" + key));
+        loadRequests();
+      }
     }
 
     function logout() {
